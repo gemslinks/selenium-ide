@@ -1015,4 +1015,24 @@ export const Commands = [
       value: { isOptional: true, ...ArgTypes.loopLimit },
     },
   ],
+  [
+    'readTable',
+    {
+      name: 'read table',
+      type: TargetTypes.LOCATOR,
+      description: `read table`,
+      target: ArgTypes.locator,
+      value: ArgTypes.arrayVariableName,
+    },
+  ],
+  [
+    'executeDatabase',
+    {
+      name: 'execute database',
+      type: TargetTypes.LOCATOR,
+      description: `execute indexed db command`,
+      target: ArgTypes.json,
+      value: { isOptional: true, ...ArgTypes.variableName },
+    },
+  ],   
 ]

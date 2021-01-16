@@ -23,10 +23,11 @@ const browserName = parser.getBrowser().name
 const isChrome = browserName === 'Chrome'
 const isFirefox = browserName === 'Firefox'
 
+//mooikfkahbdckldjjndioackbalphokd
 function getId() {
   if (process.env.SIDE_ID) return process.env.SIDE_ID
   return isChrome
-    ? 'mooikfkahbdckldjjndioackbalphokd'
+    ? 'nkobmnckappnicdmdlffjodpehehgjbj'
     : isFirefox
     ? '{a6fd85ed-e919-4a43-a5af-8da18bda539f}'
     : ''
