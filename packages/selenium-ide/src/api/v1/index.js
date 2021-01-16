@@ -93,10 +93,12 @@ function tryOverrideControl(req) {
 }
 
 router.get('/health', (req, res) => {
+  console.log('router.get health')
   res(Manager.hasPlugin(req.sender))
 })
 
 router.post('/register', (req, res) => {
+  console.log('router.post register')
   controlledOnly(req, res).then(() => {
     const plugin = {
       id: req.sender,

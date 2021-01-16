@@ -743,6 +743,27 @@ export default function seed(store, numberOfSuites = 0) {
   accessVariableForEach.createCommand(undefined, 'end', '', '')
   accessVariableForEach.createCommand(undefined, 'assert', 'result', '3')
 
+  const readTable = store.createTestCase('read table')
+  readTable.createCommand(undefined, 'open', '/tables')
+  readTable.createCommand(undefined, 'readTable', 'id=table1', 'tableData')
+  readTable.createCommand(undefined, 'executeScript', 'return ${tableData}.headerRows', 'headerRows')
+  readTable.createCommand(undefined, 'executeScript', 'return ${tableData}.bodyRows', 'bodyRows')
+  readTable.createCommand(undefined, 'echo', '${headerRows}', '')
+  readTable.createCommand(undefined, 'echo', '${bodyRows}', '')
+
+  const executeDatabase = store.createTestCase('execute database')
+  executeDatabase.createCommand(undefined, 'open', '/tables')
+  executeDatabase.createCommand(undefined, 'executeDatabase', '{"command": "deleteDB" ,"dbName": "stockDB" }', '')
+  executeDatabase.createCommand(undefined, 'executeDatabase', '{"command": "createDB" ,"dbName": "stockDB" ,"tables": [{"name":"m_contries", "indexs":["id"]}, {"name":"t_stocks"  , "indexs":["id", "name"]}]}', '')
+  executeDatabase.createCommand(undefined, 'executeDatabase', '{"command": "insert" ,"dbName": "stockDB" ,"table" : "m_contries", "datas" :[{"id":"01", "name":"japan"}, {"id":"02", "name":"usa"}]}', '')
+  executeDatabase.createCommand(undefined, 'executeDatabase', '{"command": "insert" ,"dbName": "stockDB" ,"table" : "t_stocks"  , "datas" :[{"id":"01", "name":"株１"},   {"id":"02", "name":"株２"}]}', '')
+  executeDatabase.createCommand(undefined, 'executeDatabase', '{"command": "select" ,"dbName": "stockDB" ,"table" : "m_contries", "where" : "value.id == \'01\' || value.id == \'02\'" }', 'countries')
+  executeDatabase.createCommand(undefined, 'echo', '${countries}', '')
+  executeDatabase.createCommand(undefined, 'executeDatabase', '{"command": "update" ,"dbName": "stockDB" ,"table" : "m_contries", "set":"value.name = \'変更1\'; value.name = \'変更2\';", "where" : "value.id == \'01\'" }', 'resultCount')
+  executeDatabase.createCommand(undefined, 'echo', '${resultCount}', '')
+  executeDatabase.createCommand(undefined, 'executeDatabase', '{"command": "delete" ,"dbName": "stockDB" ,"table" : "m_contries", "where" : "value.id == \'01\'" }', 'resultCount')
+  executeDatabase.createCommand(undefined, 'echo', '${resultCount}', '')
+
   const suiteAll = store.createSuite('all tests')
   store.tests.forEach(function(test) {
     suiteAll.addTestCase(test)

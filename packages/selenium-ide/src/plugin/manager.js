@@ -29,6 +29,7 @@ import { sendMessage } from './communication'
 const TIMEOUT = 5000
 
 function RunCommand(id, command, target, value, options) {
+  console.log('manager.js-RunCommand');
   return sendMessage(id, {
     action: 'execute',
     command: {
@@ -42,6 +43,7 @@ function RunCommand(id, command, target, value, options) {
 
 class PluginManager {
   constructor() {
+	console.log('manager.js-constructor');
     this.controller = null
     this.plugins = []
     this.plugins.vendorLanguages = {}
@@ -78,6 +80,7 @@ class PluginManager {
   }
 
   registerPlugin(plugin) {
+	  console.log('manager.js-registerPlugin');
     if (!this.hasPlugin(plugin.id)) {
       plugin.canEmit = false
       this.plugins.push(plugin)

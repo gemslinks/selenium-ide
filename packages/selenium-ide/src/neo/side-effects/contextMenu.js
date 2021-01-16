@@ -297,6 +297,18 @@ function createContextMenus() {
     contexts: ['all'],
     parentId: 'waitFor',
   })
+  browser.contextMenus.create({
+    id: 'readTable',
+    title: 'readTable',
+    documentUrlPatterns: ['<all_urls>'],
+    contexts: ['all']
+  })
+  browser.contextMenus.create({
+    id: 'executeDatabase',
+    title: 'executeDatabase',
+    documentUrlPatterns: ['<all_urls>'],
+    contexts: ['all']
+  })  
 }
 
 function destroyContextMenus() {

@@ -29,6 +29,16 @@ import {
   extractExceptionMessage,
   lowerFirstChar,
 } from './utils'
+import {
+  isTransactionFinish,
+  deleteDB,
+  createDB,
+  connectDB,
+  insertRD,
+  selectRD,
+  updateRD,
+  deleteRD,
+} from './indexdbUtils'
 
 // TODO: stop navigating this.browserbot.document() ... it breaks encapsulation
 
@@ -1284,7 +1294,7 @@ Selenium.prototype.doType = function(locator, value) {
    *
    * @param locator an <a href="#locators">element locator</a>
    * @param value the value to type
-   */
+   */  
   if (
     this.browserbot.controlKeyDown ||
     this.browserbot.altKeyDown ||
@@ -3828,4 +3838,109 @@ Selenium.prototype.doShowElement = function(locator) {
     elementForInjectingStyle.parentNode.removeChild(elementForInjectingStyle)
   }, 500)
   return 'element found'
+}
+
+Selenium.prototype.doReadTable = function(locator, value) {
+  let table = this.browserbot.findElement(locator)
+  let headerRows = [];  
+  let headerTrs = table.querySelectorAll('thead > tr')  
+  headerTrs.forEach(tr => { 	
+    let row = []
+    let ths = tr.querySelectorAll('th') 	
+    ths.forEach(th => row.push(th.innerText.trim().replaceAll(',', ' ')))
+    headerRows.push(row)
+  })
+
+  let bodyRows = [];  
+  let bodyTrs = table.querySelectorAll('tbody > tr')  
+  bodyTrs.forEach(tr => { 	
+    let row = []
+    let tds = tr.querySelectorAll('td') 	
+    tds.forEach(td => row.push(td.innerText.trim().replaceAll(',', ' '))) 	
+    bodyRows.push(row)
+  })
+
+  return browser.runtime.sendMessage({ 
+    storeStr: {
+      headerRows:headerRows,
+      bodyRows:bodyRows
+    }, 
+    storeVar: value 
+  })
+}
+
+function waitConditionUntil(condition, timeout, param, failureMessage) {
+  if (!timeout) {
+    throw new Error('Timeout not specified.')
+  }
+  return new Promise(function(resolve, reject) {
+    let count = 0
+    let retryInterval = 100
+    let result
+    let interval = setInterval(function() {
+      if (count > timeout) {
+        clearInterval(interval)
+        reject(failureMessage)
+      }
+      try {
+        result = condition(param)
+      } catch (error) {
+        console.log("commnad exception");
+        clearInterval(interval)
+        reject(error.message)
+      }
+      if (!result) {
+        count += retryInterval
+      } else if (result) {
+        console.log("commnad success");
+        clearInterval(interval)
+        resolve()
+      }
+    }, retryInterval)
+  })
+}
+
+Selenium.prototype.doExecuteDatabase = function(json, varName) {
+  //execute db command
+  let dbDef = JSON.parse(json)
+  if(dbDef.command == "createDB"){
+    createDB(dbDef);
+  }else if(dbDef.command == "deleteDB"){
+    deleteDB(dbDef);
+  }else if(dbDef.command == 'insert'){
+    connectDB(dbDef).then(()=>{
+      insertRD(dbDef).then(()=>{
+      }).catch(()=>{
+      });
+    }).catch(()=>{
+    });  
+  }else if(dbDef.command == 'update'){
+    connectDB(dbDef).then(()=>{
+      updateRD(dbDef, varName).then(()=>{
+      }).catch(()=>{
+      });
+    }).catch(()=>{
+    });
+  }else if(dbDef.command == 'select'){
+    connectDB(dbDef).then(()=>{
+      selectRD(dbDef, varName).then(()=>{
+      }).catch(()=>{
+      });
+    }).catch(()=>{
+    });
+  }else if(dbDef.command == 'delete'){
+    connectDB(dbDef).then(()=>{
+      deleteRD(dbDef, varName).then(()=>{
+      }).catch(()=>{
+      });
+    }).catch(()=>{
+    });
+  }    
+
+  return waitConditionUntil(
+    isTransactionFinish,
+    30000,
+    null,
+    'Unable to done db operation within the timeout specified.'
+  )  
 }

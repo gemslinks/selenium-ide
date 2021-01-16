@@ -43,8 +43,8 @@ module.exports = {
     libraryTarget: 'umd',
   },
   resolve: {
-    extensions: ['.js', '.jsx', '.json'],
-  },
+    extensions: ['.js', '.jsx', '.json', '.mjs'],
+  }, 
   module: {
     rules: [
       {
@@ -181,9 +181,9 @@ module.exports = {
               },
             },
           },
-          // Process JS with Babel.
+      // Process JS with Babel.  
           {
-            test: /\.(jsx?)$/,
+            test: /\.(jsx?|mjs)$/,
             include: [
               path.resolve(__dirname, 'selenium'),
               path.resolve(__dirname, 'src'),
@@ -192,7 +192,7 @@ module.exports = {
               {
                 loader: 'babel-loader',
                 options: {
-                  compact: true,
+                  compact: false,
                 },
               },
             ],
@@ -306,16 +306,16 @@ module.exports = {
       template: path.resolve(__dirname, 'src/neo/index.html'),
       chunks: ['neo'],
       minify: {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeRedundantAttributes: true,
-        useShortDoctype: true,
-        removeEmptyAttributes: true,
-        removeStyleLinkTypeAttributes: true,
-        keepClosingSlash: true,
-        minifyJS: true,
-        minifyCSS: true,
-        minifyURLs: true,
+        removeComments: false,
+        collapseWhitespace: false,
+        removeRedundantAttributes: false,
+        useShortDoctype: false,
+        removeEmptyAttributes: false,
+        removeStyleLinkTypeAttributes: false,
+        keepClosingSlash: false,
+        minifyJS: false,
+        minifyCSS: false,
+        minifyURLs: false,
       },
     }),
     // Makes some environment variables available to the JS code, for example:
