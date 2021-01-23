@@ -3885,14 +3885,14 @@ function waitConditionUntil(condition, timeout, param, failureMessage) {
       try {
         result = condition(param)
       } catch (error) {
-        console.log("commnad exception");
+        //console.log("commnad exception");
         clearInterval(interval)
         reject(error.message)
       }
       if (!result) {
         count += retryInterval
       } else if (result) {
-        console.log("commnad success");
+        //console.log("commnad success");
         clearInterval(interval)
         resolve()
       }
@@ -3909,7 +3909,7 @@ Selenium.prototype.doExecuteDatabase = function(json, varName) {
     deleteDB(dbDef);
   }else if(dbDef.command == 'insert'){
     connectDB(dbDef).then(()=>{
-      insertRD(dbDef).then(()=>{
+      insertRD(dbDef, varName).then(()=>{
       }).catch(()=>{
       });
     }).catch(()=>{
@@ -3939,7 +3939,7 @@ Selenium.prototype.doExecuteDatabase = function(json, varName) {
 
   return waitConditionUntil(
     isTransactionFinish,
-    30000,
+    300000,
     null,
     'Unable to done db operation within the timeout specified.'
   )  

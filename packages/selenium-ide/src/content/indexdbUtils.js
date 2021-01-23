@@ -34,7 +34,7 @@ export function isTransactionFinish(param) {
 }
 
 export function setDbStatus(event){
-  console.log(event);
+  //console.log(event);
   let dbStatus = {
      type : "done"
     ,message : ""
@@ -69,11 +69,11 @@ export function deleteDB(dbDef){
   // Request a transaction with readwrite
   var req = window.indexedDB.deleteDatabase(dbDef.dbName);
   req.onsuccess = function (event) {
-    console.log("deleteDB success")
+    //console.log("deleteDB success")
     setDbStatus(event);
   };
   req.onerror = function (event) {
-    console.log("deleteDB error")
+    //console.log("deleteDB error")
     setDbStatus(event);
   };
 }
@@ -82,7 +82,7 @@ export function deleteDB(dbDef){
 {
    "command" : "createDB"
   ,"dbName"  : "stockDB"
-  ,"tables"  : [{"name":"m_contries", "indexs":["countryId"]}, {"name":"t_stocks"  , "indexs":["stockId", "stockName"]}]
+  ,"tables"  : [{"name":"m_contries", "uks":["sys_uk01"], "indexs":["name"]}, {"name":"t_stocks", "uks":["sys_uk01"], "indexs":["stockId", "stockName"]}]
 }
 */
 export function createDB(dbDef){
@@ -92,7 +92,12 @@ export function createDB(dbDef){
     //table create
     for(let table of dbDef.tables){
       targetData = table;
-      let objectStore = event.target.result.createObjectStore(table.name, {keyPath: "sid", autoIncrement:true});
+      let objectStore = event.target.result.createObjectStore(table.name, {keyPath: "sys_pk", autoIncrement:true});
+      //uk create
+      for(let uk of table.uks){
+        targetData = uk;
+        objectStore.createIndex(uk, uk, { unique: true });
+      }      
       //index create
       for(let index of table.indexs){
         targetData = index;
@@ -101,12 +106,12 @@ export function createDB(dbDef){
     }
   }
   req.onsuccess = function(event) {
-    console.log("createDB success")
+    //console.log("createDB success")
     setDbStatus(event);
   };    
   req.onerror = function(event){
     event.target.error.data = targetData;
-    console.log("createDB error")
+    //console.log("createDB error")
     setDbStatus(event);
   }
 }
@@ -122,11 +127,11 @@ export function createDB(dbDef){
     let req = window.indexedDB.open(dbDef.dbName, 1);
     req.onsuccess = function(event){
       dbDef.dbCon = event.target.result;
-      console.log("connectDB success")
+      //console.log("connectDB success")
       resolve();
     }    
     req.onerror = function(event){
-      console.log("connectDB error")
+      //console.log("connectDB error")
       reject(event);
     }
   });
@@ -140,34 +145,39 @@ export function createDB(dbDef){
   ,"datas"   : [{"id":"01", "name":"japan"}, {"id":"02", "name":"usa"}]
 }
 */
-export function insertRD(dbDef, resolve, reject){
+export function insertRD(dbDef, varName, resolve, reject){
   return new Promise((resolve, reject) => {
     // Request a transaction with readwrite
+    let resultCount = 0;
     var trx = dbDef.dbCon.transaction([dbDef.table], "readwrite");
     trx.oncomplete = function(event) {
       setDbStatus(event);
-      console.log("insertRD oncomplete")
+      browser.runtime.sendMessage({ storeStr: resultCount, storeVar: varName });
+      //console.log("insertRD oncomplete")
       resolve();
     };
     trx.onerror = function(event){
+      debugger
       setDbStatus(event);
-      console.log("insertRD onerror")
+      //console.log("insertRD onerror")
       reject(event);
     }
 
     let table = trx.objectStore([dbDef.table]);
     let targetData = null;
+    
     dbDef.datas.map(data => {
       //error時にセットするため
       targetData = data;
       //tableにdataを追加
       let req = table.add(data)
+      resultCount++;
       req.onsuccess = function(event) {
-        console.log("insertRD add onsuccess")
+        //console.log("insertRD add onsuccess")
       };
       req.onerror = function(e) {
         //エラーデータを保存
-        console.log("insertRD add onerror")
+        //console.log("insertRD add onerror")
         e.target.error.data = targetData;
       };      
     });
@@ -185,41 +195,41 @@ export function insertRD(dbDef, resolve, reject){
   varNameはJSON.parse()でobjectに戻せる
   ※connectDB
   */
- export function selectRD(dbDef, varName){
+ export function selectRD(dbDef, varName, resolve, reject){
   return new Promise((resolve, reject) => {
     let trx = dbDef.dbCon.transaction([dbDef.table], "readonly");
     trx.oncomplete = function(event) {
       setDbStatus(event);
-      console.log("selectRD oncomplete")
+      //console.log("selectRD oncomplete")
       resolve();
     }
     trx.onerror = function(event){
+      debugger
       setDbStatus(event);
-      console.log("selectRD onerror")
+      //console.log("selectRD onerror")
       reject(event);
     }
 
     let table = trx.objectStore([dbDef.table]);
     let req = table.openCursor()
     let results = [];
-    if(dbDef.where == null) dbDef.where = true
     req.onsuccess = function(event){
       let cursor = event.target.result;
       if(cursor) {
-        console.log(cursor.value)
+        //console.log(cursor.value)
         //eval用value
         let value = cursor.value;
-        if(eval(dbDef.where)){
+        if(dbDef.where == null || eval(dbDef.where)){
           results.push(value)
         }
         cursor.continue();
       }else{
-        console.log("selectRD onsuccess")
-        browser.runtime.sendMessage({ storeStr: JSON.stringify(results), storeVar: varName })
+        //console.log("selectRD onsuccess")
+        browser.runtime.sendMessage({ storeStr: results, storeVar: varName })
       }
     }
     req.onerror = function(event){
-      console.log("selectRD onerror")
+      //console.log("selectRD onerror")
       reject(event);
     }
   });
@@ -237,18 +247,18 @@ export function insertRD(dbDef, resolve, reject){
   
   ※connectDB
   */
- export function updateRD(dbDef, varName){
+ export function updateRD(dbDef, varName, resolve, reject){
   return new Promise((resolve, reject) => {
-    debugger
     let trx = dbDef.dbCon.transaction([dbDef.table], "readwrite");
     trx.oncomplete = function(event) {
       setDbStatus(event);
-      console.log("updateRD oncomplete")
+      //console.log("updateRD oncomplete")
       resolve();
     };
     trx.onerror = function(event){
+      debugger
       setDbStatus(event);
-      console.log("updateRD onerror")
+      //console.log("updateRD onerror")
       reject(event);
     }
 
@@ -260,7 +270,7 @@ export function insertRD(dbDef, resolve, reject){
     reqSel.onsuccess = function(event){
       let cursor = event.target.result;
       if(cursor) {
-        console.log(cursor.value)
+        //console.log(cursor.value)
         //eval用value
         let value = cursor.value;
         //絞り込み
@@ -270,10 +280,10 @@ export function insertRD(dbDef, resolve, reject){
           let reqUpd = cursor.update(value)
           resultCount++
           reqUpd.onsuccess = function(event) {
-            console.log("updateRD reqUpd onsuccess")
+            //console.log("updateRD reqUpd onsuccess")
           };
           reqUpd.onerror = function(event) {
-            console.log("updateRD reqUpd onerror")
+            //console.log("updateRD reqUpd onerror")
             event.target.error.data = cursor.value;
           };           
         }
@@ -283,7 +293,7 @@ export function insertRD(dbDef, resolve, reject){
       }
     }
     reqSel.onerror = function(event){
-      console.log("updateRD reqSel onerror")
+      //console.log("updateRD reqSel onerror")
       reject(event);
     }
   });
@@ -300,18 +310,18 @@ export function insertRD(dbDef, resolve, reject){
   
   ※connectDB
   */
- export function deleteRD(dbDef, varName){
+ export function deleteRD(dbDef, varName, resolve, reject){
   return new Promise((resolve, reject) => {
-    debugger
     let trx = dbDef.dbCon.transaction([dbDef.table], "readwrite");
     trx.oncomplete = function(event) {
       setDbStatus(event);
-      console.log("deleteRD oncomplete")
+      //console.log("deleteRD oncomplete")
       resolve();
     };
     trx.onerror = function(event){
+      debugger
       setDbStatus(event);
-      console.log("deleteRD onerror")
+      //console.log("deleteRD onerror")
       reject(event);
     }
 
@@ -323,7 +333,7 @@ export function insertRD(dbDef, resolve, reject){
     reqSel.onsuccess = function(event){
       let cursor = event.target.result;
       if(cursor) {
-        console.log(cursor.value)
+        //console.log(cursor.value)
         let value = cursor.value;
         //絞り込み
         if(eval(dbDef.where)){
@@ -331,10 +341,10 @@ export function insertRD(dbDef, resolve, reject){
           let reqUpd = cursor.delete(value)
           resultCount++
           reqUpd.onsuccess = function(event) {
-            console.log("deleteRD reqUpd onsuccess")
+            //console.log("deleteRD reqUpd onsuccess")
           };
           reqUpd.onerror = function(event) {
-            console.log("deleteRD reqUpd onerror")
+            //console.log("deleteRD reqUpd onerror")
             event.target.error.data = cursor.value;
           };           
         }
@@ -344,7 +354,7 @@ export function insertRD(dbDef, resolve, reject){
       }
     }
     reqSel.onerror = function(event){
-      console.log("deleteRD reqSel onerror")
+      //console.log("deleteRD reqSel onerror")
       reject(event);
     }
   });

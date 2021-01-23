@@ -113,7 +113,7 @@ mkdir /home/k1810-08/wks
 ### workspaceへソースをclone
 ```sh
 cd /home/k1810-08/wks
-git clone https://github.com/SeleniumHQ/selenium-ide.git -b v3 --depth 1 
+git clone https://github.com/gemslinks/selenium-ide.git -b v3 --depth 1 
 ```
 ### 確認
 ```sh
@@ -189,7 +189,7 @@ git status
 # Loacalへコミット
 git commit -m "first commit"
 # リモート確認
-git remote
+git remote -v
 # リモートにfork_master
 git remote add fork_master https://github.com/gemslinks/selenium-ide.git
 #local repをremote rep mainにpush

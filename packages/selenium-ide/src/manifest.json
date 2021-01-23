@@ -29,6 +29,7 @@
     "notifications",
     "storage",
     "debugger",
+    "unlimitedStorage",
     "<all_urls>"
   ],
   "externally_connectable": {
